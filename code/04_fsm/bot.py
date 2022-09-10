@@ -31,7 +31,7 @@ async def main():
     logger.error("Starting bot")
 
     # Парсинг файла конфигурации
-    config = load_config("config/bot.ini")
+    config = load_config(f'C:/Users/Serge/Projects/Python/fsmgroosha/aiogram-2-guide/code/04_fsm/config/bot.ini')
 
     # Объявление и инициализация объектов бота и диспетчера
     bot = Bot(token=config.tg_bot.token)
