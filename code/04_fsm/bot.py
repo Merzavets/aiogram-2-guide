@@ -34,7 +34,7 @@ async def main():
     config = load_config(f'C:/Users/Serge/Projects/Python/fsmgroosha/aiogram-2-guide/code/04_fsm/config/bot.ini')
 
     # Объявление и инициализация объектов бота и диспетчера
-    bot = Bot(token=config.tg_bot.token)
+    bot = Bot(token = config.tg_bot.token)
     dp = Dispatcher(bot, storage=MemoryStorage())
 
     # Регистрация хэндлеров
