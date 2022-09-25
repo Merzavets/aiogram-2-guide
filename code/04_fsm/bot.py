@@ -1,3 +1,5 @@
+from os import path 
+    
 import asyncio
 import logging
 
@@ -29,9 +31,12 @@ async def main():
         format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
     )
     logger.error("Starting bot")
+    
+    file_path = path.dirname(path.realpath(__file__))
 
     # Парсинг файла конфигурации
-    config = load_config(f'C:/Users/Serge/Projects/Python/fsmgroosha/aiogram-2-guide/code/04_fsm/config/bot.ini')
+    config = load_config(file_path + '/config/bot.ini')
+    
 
     # Объявление и инициализация объектов бота и диспетчера
     bot = Bot(token = config.tg_bot.token)
