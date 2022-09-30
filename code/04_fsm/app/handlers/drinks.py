@@ -12,7 +12,7 @@ class OrderDrinks(StatesGroup):
     waiting_for_drink_size = State()
 
 
-async def drinks_start(message: types.Message, state: FSMContext):
+async def searchBegin(message: types.Message, state: FSMContext):
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
     for name in available_drinks_names:
         keyboard.add(name)
@@ -20,7 +20,7 @@ async def drinks_start(message: types.Message, state: FSMContext):
     await state.set_state(OrderDrinks.waiting_for_drink_name.state)
 
 
-async def drinks_chosen(message: types.Message, state: FSMContext):
+async def search4Age(message: types.Message, state: FSMContext):
     if message.text.lower() not in available_drinks_names:
         await message.answer("Пожалуйста, выберите напиток, используя клавиатуру ниже.")
         return
@@ -33,7 +33,7 @@ async def drinks_chosen(message: types.Message, state: FSMContext):
     await message.answer("Теперь выберите размер порции:", reply_markup=keyboard)
 
 
-async def drinks_size_chosen(message: types.Message, state: FSMContext):
+async def search4Disease(message: types.Message, state: FSMContext):
     if message.text.lower() not in available_drinks_sizes:
         await message.answer("Пожалуйста, выберите размер порции, используя клавиатуру ниже.")
         return
@@ -44,6 +44,6 @@ async def drinks_size_chosen(message: types.Message, state: FSMContext):
 
 
 def register_handlers_drinks(dp: Dispatcher):
-    dp.register_message_handler(drinks_start, commands="drinks", state="*")
-    dp.register_message_handler(drinks_chosen, state=OrderDrinks.waiting_for_drink_name)
-    dp.register_message_handler(drinks_size_chosen, state=OrderDrinks.waiting_for_drink_size)
+    dp.register_message_handler(searchBegin, commands="drinks", state="*")
+    dp.register_message_handler(search4Age, state=OrderDrinks.waiting_for_drink_name)
+    dp.register_message_handler(search4Disease, state=OrderDrinks.waiting_for_drink_size)
