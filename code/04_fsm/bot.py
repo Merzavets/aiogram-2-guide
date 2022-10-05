@@ -8,8 +8,9 @@ from aiogram.types import BotCommand
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 from app.config_reader import load_config
-from app.handlers.drinks import register_handlers_drinks
+# from app.handlers.drinks import register_handlers_drinks
 from app.handlers.food import register_handlers_food
+from app.handlers.search import register_handlers_search
 from app.handlers.common import register_handlers_common
 
 logger = logging.getLogger(__name__)
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 async def set_commands(bot: Bot):
     commands = [
         BotCommand(command="/drinks", description="Заказать напитки"),
-        BotCommand(command="/food", description="Заказать блюда"),
+        BotCommand(command="/search", description="Поискать детишек"),
         BotCommand(command="/cancel", description="Отменить текущее действие")
     ]
     await bot.set_my_commands(commands)
@@ -44,7 +45,8 @@ async def main():
 
     # Регистрация хэндлеров
     register_handlers_common(dp, config.tg_bot.admin_id)
-    register_handlers_drinks(dp)
+    # register_handlers_drinks(dp)
+    register_handlers_search(dp)
     register_handlers_food(dp)
 
     # Установка команд бота

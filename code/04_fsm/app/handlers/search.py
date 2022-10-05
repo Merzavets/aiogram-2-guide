@@ -3,38 +3,48 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 
 
-available_drinks_names = ["чай", "кофе", "какао"]
-available_drinks_sizes = ["250мл", "0.5л", "1л"]
+ageStage = [
+    ["от", "ageFrom"], 
+    ["до", "ageTo"], 
+    ["далее >>", "ageNext"]
+]
+amountStage = [
+    ["от", "amountFrom"], 
+    ["до", "amountTo"], 
+    ["далее >>", "amountNext"]]
 
 
-class OrderDrinks(StatesGroup):
-    waiting_for_drink_name = State()
-    waiting_for_drink_size = State()
+class MakeSearch(StatesGroup):
+    waitForAge = State()
+    waintForAmount = State()
 
 
 async def drinks_start(message: types.Message, state: FSMContext):
-    keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    for name in available_drinks_names:
-        keyboard.add(name)
-    await message.answer("Выберите напиток:", reply_markup=keyboard)
-    await state.set_state(OrderDrinks.waiting_for_drink_name.state)
+    ageBtns = []
+    keyboard = types.InlineKeyboardMarkup()
+    for name in ageStage:
+        # ageBtns.add(types.InlineKeyboardButton(name, callback_data=name))
+        ageBtns.append(types.InlineKeyboardButton(name[0], callback_data=name[1]))
+    keyboard.add(*ageBtns)
+    await message.answer("Задайте возраст поиска от 0 до 17.\nНажмите Далее для перехода к следующему этапу.", reply_markup=keyboard)
+    await state.set_state(MakeSearch.waitForAge.state)
 
 
 async def drinks_chosen(message: types.Message, state: FSMContext):
-    if message.text.lower() not in available_drinks_names:
+    if message.text.lower() not in ageStage:
         await message.answer("Пожалуйста, выберите напиток, используя клавиатуру ниже.")
         return
     await state.update_data(chosen_food=message.text.lower())
 
-    keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    for size in available_drinks_sizes:
+    keyboard = types.InlineKeyboardMarkup(resize_keyboard=True, row_width=2)
+    for size in amountStage:
         keyboard.add(size)
-    await state.set_state(OrderDrinks.waiting_for_drink_size.state)
+    await state.set_state(MakeSearch.waintForAmount.state)
     await message.answer("Теперь выберите размер порции:", reply_markup=keyboard)
 
 
 async def drinks_size_chosen(message: types.Message, state: FSMContext):
-    if message.text.lower() not in available_drinks_sizes:
+    if message.text.lower() not in amountStage:
         await message.answer("Пожалуйста, выберите размер порции, используя клавиатуру ниже.")
         return
     user_data = await state.get_data()
@@ -43,7 +53,7 @@ async def drinks_size_chosen(message: types.Message, state: FSMContext):
     await state.finish()
 
 
-def register_handlers_drinks(dp: Dispatcher):
-    dp.register_message_handler(drinks_start, commands="drinks", state="*")
-    dp.register_message_handler(drinks_chosen, state=OrderDrinks.waiting_for_drink_name)
-    dp.register_message_handler(drinks_size_chosen, state=OrderDrinks.waiting_for_drink_size)
+def register_handlers_search(dp: Dispatcher):
+    dp.register_message_handler(drinks_start, commands="search", state="*")
+    dp.register_message_handler(drinks_chosen, state=MakeSearch.waitForAge)
+    dp.register_message_handler(drinks_size_chosen, state=MakeSearch.waintForAmount)
