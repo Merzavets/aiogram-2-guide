@@ -58,22 +58,32 @@ async def SearchAgeFrom(message: types.Message, state: FSMContext):
 
 async def SearchAgeTo(callback: types.CallbackQuery, state: FSMContext):
     await state.update_data(ageFrom=callback.data.lower())
-#    await state.update_data(ageFrom = '999')
     udata = await state.get_data()
-#    await callback.answer(udata.get('ageFrom'))
-#    udata = await state.get_data()
-    ageStage = [[str(i), str(i)] for i in range (int(udata.get('ageFrom')), 18)]
+    ageFrom = int(udata.get('ageFrom'))
+
+### TODO: посчитать красивое количество рядов
+    rowWidths = {
+        "18" : 6,
+        "17" : 4,
+        "16" : 5,
+        "15" : 7,
+        "14" : 7,
+        "13" : 6
+    }
+    
+    rwidth = rowWidths[str(18 - ageFrom)]
+    ageStage = [[str(i), str(i)] for i in range (ageFrom, 18)]
     ageStage.append(["любой", "17"])
 
     ageBtns = []
-    keyboard = types.InlineKeyboardMarkup(row_width=6)
+    keyboard = types.InlineKeyboardMarkup(row_width = rwidth)
     for name in ageStage:
         # ageBtns.add(types.InlineKeyboardButton(name, callback_data=name))
-        ageBtns.append(types.InlineKeyboardButton(name[0], callback_data=name[1]))
+        ageBtns.append(types.InlineKeyboardButton(name[0], callback_data = name[1]))
     keyboard.add(*ageBtns)
 #    await callback.message.delete_reply_markup()
 
-    await callback.message.edit_text("Выберите _верхнюю_ границу поиска возраста\nили нажмите *Любой*",  reply_markup=keyboard, parse_mode="Markdown")
+    await callback.message.edit_text("Выберите _верхнюю_ границу поиска возраста\nили нажмите *Любой*",  reply_markup = keyboard, parse_mode = "Markdown")
     await state.set_state(MakeSearch.waitForAmountFrom.state)
 
 
