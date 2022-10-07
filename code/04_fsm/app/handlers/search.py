@@ -43,6 +43,7 @@ class MakeSearch(StatesGroup):
     waitForAmountTo = State()
 
 
+#######################################################################################
 async def SearchAgeFrom(message: types.Message, state: FSMContext):
     ageStage = [[str(i), str(i)] for i in range (0, 18)]
     ageStage.append(["любой", "0"])
@@ -56,6 +57,7 @@ async def SearchAgeFrom(message: types.Message, state: FSMContext):
     await message.answer("Выберите _нижнюю_ границу поиска возраста\nили нажмите *Любой*", reply_markup=keyboard, parse_mode="Markdown")
     await state.set_state(MakeSearch.waitForAgeTo.state)
 
+#######################################################################################
 async def SearchAgeTo(callback: types.CallbackQuery, state: FSMContext):
     await state.update_data(ageFrom=callback.data.lower())
     udata = await state.get_data()
@@ -71,8 +73,8 @@ async def SearchAgeTo(callback: types.CallbackQuery, state: FSMContext):
         "13" : 6
     }
     
-    rwidth = rowWidths[str(18 - ageFrom)]
-    ageStage = [[str(i), str(i)] for i in range (ageFrom, 18)]
+    rwidth = 6 #rowWidths[str(18 - ageFrom)]
+    ageStage = [[str(i), str(i)] for i in  range (ageFrom, 18)]
     ageStage.append(["любой", "17"])
 
     ageBtns = []
@@ -83,11 +85,27 @@ async def SearchAgeTo(callback: types.CallbackQuery, state: FSMContext):
     keyboard.add(*ageBtns)
 #    await callback.message.delete_reply_markup()
 
-    await callback.message.edit_text("Выберите _верхнюю_ границу поиска возраста\nили нажмите *Любой*",  reply_markup = keyboard, parse_mode = "Markdown")
+    await callback.message.edit_text(f"Ищем детишек от *{ageFrom}* до...\nВыберите _верхнюю_ границу поиска возраста\nили нажмите *Любой*",  reply_markup = keyboard, parse_mode = "Markdown")
     await state.set_state(MakeSearch.waitForAmountFrom.state)
 
+#######################################################################################
+async def SearchAmountFrom(callback: types.CallbackQuery, state: FSMContext):
+    await state.update_data(ageTo=callback.data.lower())
+    udata = await state.get_data()
+
+    amountChoices = [
+        ["любая", "100"]
+    ]
+    amountBtns = []
+    keyboard = types.InlineKeyboardMarkup(row_width=6)
+    for choice in amountChoices:
+        amountBtns.append(types.InlineKeyboardButton(choice[0], callback_data=choice[1]))
+    keyboard.add(*amountBtns)
+    await callback.message.edit_text(f"Ищем детишек от *{udata.get('ageFrom')}* до *{udata.get('ageTo')}*\nВведите _нижнюю_ границу поиска суммы от 100₽\nили нажмите *Любая*", reply_markup=keyboard, parse_mode="Markdown")
+    await state.set_state(MakeSearch.waitForAmountTo.state)
 
 
+#######################################################################################
 async def ValidateAgeTo(message: types.Message, state: FSMContext):
 #    if not 0 <= int(message.text) <= 17:
 #        await message.answer("ValidAgeTo Возраст должен быть от 0 до 17 лет.")
@@ -103,6 +121,8 @@ async def ValidateAgeTo(message: types.Message, state: FSMContext):
     await state.set_state(MakeSearch.waitForAmountFrom.state)
     await message.answer("Теперь выберите размер порции:", reply_markup=keyboard)
 
+
+#######################################################################################
 async def ValidateAgeFrom(message: types.Message, state: FSMContext):
     if not 0 <= int(message.text) <= 17:
         await message.answer("ValidAgeFrom: Возраст должен быть от 0 до 17 лет.")
@@ -117,6 +137,7 @@ async def ValidateAgeFrom(message: types.Message, state: FSMContext):
     await message.answer("Теперь выберите размер порции:", reply_markup=keyboard)
 
 
+#######################################################################################
 async def drinks_size_chosen(message: types.Message, state: FSMContext):
     if message.text.lower() not in amountStage:
         await message.answer("Пожалуйста, выберите размер порции, используя клавиатуру ниже.")
@@ -137,3 +158,4 @@ def register_handlers_search(dp: Dispatcher):
     dp.register_message_handler(drinks_size_chosen, state=MakeSearch.waitForAmountFrom)
 #    dp.register_callback_query_handler(ValidateAgeTo, state=MakeSearch.waitForAgeTo )
     dp.register_callback_query_handler(SearchAgeTo, state=MakeSearch.waitForAgeTo)
+    dp.register_callback_query_handler(SearchAmountFrom, state=MakeSearch.waitForAmountFrom)
