@@ -89,7 +89,7 @@ async def SearchAgeTo(callback: types.CallbackQuery, state: FSMContext):
     await state.set_state(MakeSearch.waitForAmountFrom.state)
 
 #######################################################################################
-async def SearchAmountFrom(callback: types.CallbackQuery, state: FSMContext):
+async def SearchAmountFromCall(callback: types.CallbackQuery, state: FSMContext):
     await state.update_data(ageTo=callback.data.lower())
     udata = await state.get_data()
 
@@ -102,6 +102,22 @@ async def SearchAmountFrom(callback: types.CallbackQuery, state: FSMContext):
         amountBtns.append(types.InlineKeyboardButton(choice[0], callback_data=choice[1]))
     keyboard.add(*amountBtns)
     await callback.message.edit_text(f"Ищем детишек от *{udata.get('ageFrom')}* до *{udata.get('ageTo')}*\nВведите _нижнюю_ границу поиска суммы от 100₽\nили нажмите *Любая*", reply_markup=keyboard, parse_mode="Markdown")
+    await state.set_state(MakeSearch.waitForAmountTo.state)
+
+#######################################################################################
+async def SearchAmountFromMsg(message: types.Message, state: FSMContext):
+    await state.update_data(ageTo=message.data.lower())
+    udata = await state.get_data()
+
+    amountChoices = [
+        ["любая", "100"]
+    ]
+    amountBtns = []
+    keyboard = types.InlineKeyboardMarkup(row_width=6)
+    for choice in amountChoices:
+        amountBtns.append(types.InlineKeyboardButton(choice[0], callback_data=choice[1]))
+    keyboard.add(*amountBtns)
+    await message.edit_text(f"Ищем детишек от *{udata.get('ageFrom')}* до *{udata.get('ageTo')}*\nВведите _нижнюю_ границу поиска суммы от 100₽\nили нажмите *Любая*", reply_markup=keyboard, parse_mode="Markdown")
     await state.set_state(MakeSearch.waitForAmountTo.state)
 
 
@@ -158,4 +174,4 @@ def register_handlers_search(dp: Dispatcher):
     dp.register_message_handler(drinks_size_chosen, state=MakeSearch.waitForAmountFrom)
 #    dp.register_callback_query_handler(ValidateAgeTo, state=MakeSearch.waitForAgeTo )
     dp.register_callback_query_handler(SearchAgeTo, state=MakeSearch.waitForAgeTo)
-    dp.register_callback_query_handler(SearchAmountFrom, state=MakeSearch.waitForAmountFrom)
+    dp.register_callback_query_handler(SearchAmountFromCall, state=MakeSearch.waitForAmountFrom)
