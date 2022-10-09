@@ -35,6 +35,7 @@ amountStage = [
     ["от", "amountFrom"], 
     ["до", "amountTo"], 
     ["далее >>", "amountNext"]]
+ChildAges = range(0, 18)
 
 
 class MakeSearch(StatesGroup):
@@ -44,7 +45,7 @@ class MakeSearch(StatesGroup):
 
 
 #######################################################################################
-async def SearchAgeFrom(message: types.Message, state: FSMContext):
+async def StartSearch(message: types.Message, state: FSMContext):
     ageStage = [[str(i), str(i)] for i in range (0, 18)]
     ageStage.append(["любой", "0"])
 
@@ -58,6 +59,8 @@ async def SearchAgeFrom(message: types.Message, state: FSMContext):
     await state.set_state(MakeSearch.waitForAgeTo.state)
 
 #######################################################################################
+### state: 'MakeSearch:waitForAgeTo'
+### called when 'age from' button is pressed
 async def SearchAgeTo(callback: types.CallbackQuery, state: FSMContext):
     await state.update_data(ageFrom=callback.data.lower())
     udata = await state.get_data()
@@ -75,7 +78,7 @@ async def SearchAgeTo(callback: types.CallbackQuery, state: FSMContext):
     
     rwidth = 6 #rowWidths[str(18 - ageFrom)]
     ageStage = [[str(i), str(i)] for i in  range (ageFrom, 18)]
-    ageStage.append(["любой", "17"])
+    # ageStage.append(["любой", "17"])
 
     ageBtns = []
     keyboard = types.InlineKeyboardMarkup(row_width = rwidth)
@@ -83,12 +86,15 @@ async def SearchAgeTo(callback: types.CallbackQuery, state: FSMContext):
         # ageBtns.add(types.InlineKeyboardButton(name, callback_data=name))
         ageBtns.append(types.InlineKeyboardButton(name[0], callback_data = name[1]))
     keyboard.add(*ageBtns)
+    keyboard.row(types.InlineKeyboardButton("любой", callback_data="17"))
 #    await callback.message.delete_reply_markup()
 
     await callback.message.edit_text(f"Ищем детишек от *{ageFrom}* до...\nВыберите _верхнюю_ границу поиска возраста\nили нажмите *Любой*",  reply_markup = keyboard, parse_mode = "Markdown")
     await state.set_state(MakeSearch.waitForAmountFrom.state)
 
 #######################################################################################
+### called when 'age to' button is pressed
+### state: MakeSearch:waitForAmountFrom
 async def SearchAmountFromCall(callback: types.CallbackQuery, state: FSMContext):
     await state.update_data(ageTo=callback.data.lower())
     udata = await state.get_data()
@@ -139,38 +145,46 @@ async def ValidateAgeTo(message: types.Message, state: FSMContext):
 
 
 #######################################################################################
-async def ValidateAgeFrom(message: types.Message, state: FSMContext):
-    if not 0 <= int(message.text) <= 17:
-        await message.answer("ValidAgeFrom: Возраст должен быть от 0 до 17 лет.")
+### если вводим текст на этапе нижней границы возраста
+### state: 'MakeSearch:waitForAgeTo'
+async def ValidateAgeFromInput(message: types.Message, state: FSMContext):
+    if message.text.isnumeric() and (int(message.text) in ChildAges):
+        await state.update_data(ageFrom=message.text.lower())
+    else:
+        await message.reply("ValidAgeFrom: Возраст должен быть от 0 до 17 лет.")
+        await state.set_state(MakeSearch.waitForAmountFrom.state)
         return
-    await state.update_data(ageFrom=message.text.lower())
- #   await message.answer(state.get_data(text=ageFrom))
+
 
     keyboard = types.InlineKeyboardMarkup(resize_keyboard=True, row_width=2)
     for size in amountStage:
         keyboard.add(size)
-    await state.set_state(MakeSearch.waitForAmountFrom.state)
-    await message.answer("Теперь выберите размер порции:", reply_markup=keyboard)
+    ### await state.set_state(MakeSearch.waitForAmountFrom.state)
+    ### TODO:какой тут "стейт" должен быть?
+    # await message.answer("Теперь выберите размер порции:", reply_markup=keyboard)
 
 
 #######################################################################################
+### called when 'age to' is entered manually
+### 'MakeSearch:waitForAmountFrom'
 async def drinks_size_chosen(message: types.Message, state: FSMContext):
-    if message.text.lower() not in amountStage:
+    if not (message.text.isnumeric() and (int(message.text) in ChildAges)):
         await message.answer("Пожалуйста, выберите размер порции, используя клавиатуру ниже.")
         return
+    await state.update_data(ageTo=message.text)
     user_data = await state.get_data()
-    await message.answer(f"Вы заказали {user_data['ageFrom']} объёмом {message.text.lower()}.\n"
+    await message.answer(f"Вы заказали {user_data['ageFrom']} объёмом {user_data['ageTo']}.\n"
                          f"Попробуйте теперь заказать еду: /food", reply_markup=types.ReplyKeyboardRemove())
     await state.finish()
 
 
 
 def register_handlers_search(dp: Dispatcher):
-    dp.register_message_handler(SearchAgeFrom, commands="search", state="*")
+    dp.register_message_handler(StartSearch, commands="search", state="*")
 #    dp.register_message_handler(SearchAgeTo, state=MakeSearch.waitForAgeTo)
     
 #    dp.register_message_handler(ValidateAgeTo, state=MakeSearch.waitForAge, text="#1")
-    dp.register_message_handler(ValidateAgeFrom, state=MakeSearch.waitForAgeTo)
+    dp.register_message_handler(ValidateAgeFromInput, state=MakeSearch.waitForAgeTo)
     dp.register_message_handler(drinks_size_chosen, state=MakeSearch.waitForAmountFrom)
 #    dp.register_callback_query_handler(ValidateAgeTo, state=MakeSearch.waitForAgeTo )
     dp.register_callback_query_handler(SearchAgeTo, state=MakeSearch.waitForAgeTo)
