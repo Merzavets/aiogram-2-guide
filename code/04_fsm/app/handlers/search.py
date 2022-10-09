@@ -4,6 +4,8 @@ from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 
+### https://surik00.gitbooks.io/aiogram-lessons/content/chapter5.html
+
 
 # ageStage = [[str(i), "#" + str(i)] for i in range (0, 18)
 #    ["от", "ageFrom"], 
